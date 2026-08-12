@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Cover from "@/components/sections/Cover";
 import Hero from "@/components/sections/Hero";
 import Verse from "@/components/sections/Verse";
@@ -43,7 +43,10 @@ export default function Invitation() {
 
   return (
     <main className="relative min-h-screen">
-      <Cover opened={opened} onOpen={handleOpen} />
+      {/* Suspense wajib: Cover membaca ?to= via useSearchParams */}
+      <Suspense fallback={null}>
+        <Cover opened={opened} onOpen={handleOpen} />
+      </Suspense>
 
       <Hero />
       <Verse />

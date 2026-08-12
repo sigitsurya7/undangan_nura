@@ -32,9 +32,14 @@ export default function Countdown() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null | "pending">("pending");
 
   useEffect(() => {
-    setTimeLeft(getTimeLeft(target));
-    const id = setInterval(() => setTimeLeft(getTimeLeft(target)), 1000);
-    return () => clearInterval(id);
+    const update = () => setTimeLeft(getTimeLeft(target));
+    // Update pertama async (rAF) agar tidak setState sinkron di effect
+    const raf = requestAnimationFrame(update);
+    const id = setInterval(update, 1000);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(id);
+    };
   }, [target]);
 
   const units =

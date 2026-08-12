@@ -14,29 +14,46 @@ export interface RsvpPayload {
   guestCount: number;
 }
 
-/**
- * Placeholder submit handler — sambungkan ke backend di sini
- * (mis. fetch("/api/rsvp", { method: "POST", body: JSON.stringify(payload) })).
- */
-function handleRSVP(payload: RsvpPayload): Promise<void> {
-  console.log("RSVP submitted:", payload);
-  return Promise.resolve();
+/** Kirim konfirmasi kehadiran ke storage via /api/rsvp. */
+async function handleRSVP(payload: RsvpPayload): Promise<void> {
+  const res = await fetch("/api/rsvp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as {
+      error?: string;
+    } | null;
+    throw new Error(data?.error ?? "Gagal menyimpan konfirmasi.");
+  }
 }
 
-/** WILL YOU JOIN US? — RSVP form with mock submit. */
+/** WILL YOU JOIN US? — RSVP form, tersimpan ke storage. */
 export default function Rsvp() {
   const [name, setName] = useState("");
   const [attendance, setAttendance] = useState<Attendance>("hadir");
   const [guestCount, setGuestCount] = useState(1);
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!weddingConfig.rsvp.enabled) return null;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    await handleRSVP({ name: name.trim(), attendance, guestCount });
-    setSubmitted(true);
+    if (!name.trim() || sending) return;
+
+    setSending(true);
+    setError(null);
+    try {
+      await handleRSVP({ name: name.trim(), attendance, guestCount });
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -142,11 +159,21 @@ export default function Rsvp() {
                 </div>
               )}
 
+              {error && (
+                <p
+                  role="alert"
+                  className="mt-6 border-[3px] border-ink bg-coral px-4 py-3 text-sm font-bold text-cream"
+                >
+                  {error}
+                </p>
+              )}
+
               <button
                 type="submit"
-                className="btn-brutal mt-8 w-full bg-coral px-6 py-4 text-sm uppercase text-cream sm:text-base"
+                disabled={sending}
+                className="btn-brutal mt-8 w-full bg-coral px-6 py-4 text-sm uppercase text-cream disabled:opacity-70 sm:text-base"
               >
-                Konfirmasi Kehadiran
+                {sending ? "Mengirim..." : "Konfirmasi Kehadiran"}
                 <ArrowRight aria-hidden="true" className="h-5 w-5" />
               </button>
             </form>

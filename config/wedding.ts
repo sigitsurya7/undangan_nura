@@ -42,9 +42,16 @@ export interface Wish {
 
 export const weddingConfig = {
   meta: {
-    /** Ganti dengan domain undangan setelah deploy */
-    siteUrl: "https://nura-dika.example.com",
+    /** Domain undangan (dipakai untuk metadata & generate link) */
+    siteUrl: "https://undangan-nura.vercel.app",
     ogImage: "/images/og-image.jpg",
+  },
+
+  admin: {
+    /** Passcode halaman /kirim_undangan (deterrent ringan, bukan keamanan kuat) */
+    passcode: "n5926d",
+    /** Salah berturut-turut sebanyak ini → diarahkan ke halaman awal */
+    maxAttempts: 3,
   },
 
   couple: {

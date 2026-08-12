@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ArrowRight, Heart } from "lucide-react";
 import { weddingConfig } from "@/config/wedding";
 
@@ -12,15 +12,11 @@ interface CoverProps {
 /**
  * Full-screen opening cover. Shows guest greeting (reads `?to=` from the URL,
  * falls back to the placeholder) and the "Buka Undangan" button.
+ * Pemakainya wajib membungkus dengan <Suspense> (karena useSearchParams).
  */
 export default function Cover({ onOpen, opened }: CoverProps) {
   const { couple, event } = weddingConfig;
-  const [guestName, setGuestName] = useState("[Nama Tamu]");
-
-  useEffect(() => {
-    const to = new URLSearchParams(window.location.search).get("to");
-    if (to && to.trim()) setGuestName(to.trim());
-  }, []);
+  const guestName = useSearchParams().get("to")?.trim() || "[Nama Tamu]";
 
   return (
     <div

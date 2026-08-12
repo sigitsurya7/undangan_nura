@@ -1,30 +1,72 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
 import { weddingConfig, type Wish } from "@/config/wedding";
+import type { StoredWish } from "@/lib/records";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
-/** WISHES & PRAYERS — wish form + list (dummy seed, local state only). */
+/**
+ * WISHES & PRAYERS — form + daftar ucapan.
+ * Data disimpan via /api/wishes; dummy seed tampil selama belum ada
+ * ucapan tersimpan (atau storage belum dikonfigurasi).
+ */
 export default function Wishes() {
   const { wishes } = weddingConfig;
   const [list, setList] = useState<Wish[]>(wishes.seed);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  );
+
+  useEffect(() => {
+    if (!wishes.enabled) return;
+    fetch("/api/wishes")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { wishes?: StoredWish[] } | null) => {
+        if (data?.wishes && data.wishes.length > 0) setList(data.wishes);
+      })
+      .catch(() => {
+        /* gagal memuat — biarkan seed tampil */
+      });
+  }, [wishes.enabled]);
 
   if (!wishes.enabled) return null;
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !message.trim()) return;
-    setList((cur) => [{ name: name.trim(), message: message.trim() }, ...cur]);
-    setName("");
-    setMessage("");
-    setSent(true);
-    setTimeout(() => setSent(false), 2500);
+    if (!name.trim() || !message.trim() || status === "sending") return;
+
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/wishes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), message: message.trim() }),
+      });
+      if (!res.ok) throw new Error();
+
+      const wish: Wish = { name: name.trim(), message: message.trim() };
+      // Buang seed dummy saat ucapan asli pertama masuk
+      setList((cur) => [wish, ...(cur === wishes.seed ? [] : cur)]);
+      setName("");
+      setMessage("");
+      setStatus("sent");
+      setTimeout(() => setStatus("idle"), 2500);
+    } catch {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
   };
+
+  const buttonLabel = {
+    idle: "Kirim Ucapan",
+    sending: "Mengirim...",
+    sent: "Terkirim ✦",
+    error: "Gagal — coba lagi",
+  }[status];
 
   const tones = ["bg-lemon", "bg-bubblegum", "bg-periwinkle"];
 
@@ -42,6 +84,7 @@ export default function Wishes() {
               <input
                 type="text"
                 required
+                maxLength={100}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Nama kamu"
@@ -55,6 +98,7 @@ export default function Wishes() {
               </span>
               <textarea
                 required
+                maxLength={500}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tulis ucapan dan doa terbaikmu..."
@@ -65,9 +109,12 @@ export default function Wishes() {
 
             <button
               type="submit"
-              className="btn-brutal mt-6 w-full bg-lemon px-6 py-4 text-sm uppercase sm:text-base"
+              disabled={status === "sending"}
+              className={`btn-brutal mt-6 w-full px-6 py-4 text-sm uppercase sm:text-base ${
+                status === "error" ? "bg-coral text-cream" : "bg-lemon"
+              } disabled:opacity-70`}
             >
-              {sent ? "Terkirim ✦" : "Kirim Ucapan"}
+              {buttonLabel}
               <Send aria-hidden="true" className="h-4 w-4" />
             </button>
           </form>
