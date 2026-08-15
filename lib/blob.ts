@@ -1,15 +1,22 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { findEnvByPattern } from "@/lib/storage";
 
 /**
  * Upload foto sederhana untuk halaman /undangan_setting.
  *
  * Production (Vercel): Vercel Blob dari tab Storage (free/Hobby tier).
- *   Env BLOB_READ_WRITE_TOKEN terisi otomatis setelah di-connect.
+ *   Env BLOB_READ_WRITE_TOKEN biasanya terisi otomatis setelah di-connect,
+ *   tapi kalau store diberi nama/awalan (mis. "MYPROJECT_BLOB_READ_WRITE_TOKEN")
+ *   Vercel memakai nama itu apa adanya — jadi kita cari juga secara pola nama.
  *
  * Development tanpa Blob: fallback ke public/uploads/ (di-gitignore),
  * disajikan langsung oleh dev server Next.js.
  */
+
+function getBlobToken(): string | undefined {
+  return process.env.BLOB_READ_WRITE_TOKEN ?? findEnvByPattern("_BLOB_READ_WRITE_TOKEN");
+}
 
 function safeFileName(originalName: string): string {
   const ext = originalName.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
@@ -17,7 +24,7 @@ function safeFileName(originalName: string): string {
 }
 
 export async function uploadImage(file: File): Promise<string> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = getBlobToken();
   const filename = safeFileName(file.name);
 
   if (token) {
@@ -41,7 +48,7 @@ export async function uploadImage(file: File): Promise<string> {
 
 /** Hapus foto (best-effort — kegagalan tidak melempar error). */
 export async function deleteImage(url: string): Promise<void> {
-  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  const token = getBlobToken();
 
   if (token && url.startsWith("http")) {
     try {

@@ -6,8 +6,10 @@ import path from "path";
  * Storage sederhana berbasis list untuk wishes / RSVP / undangan.
  *
  * Production (Vercel): Upstash Redis dari Vercel Marketplace (free tier).
- *   Integrasinya otomatis mengisi env KV_REST_API_URL + KV_REST_API_TOKEN
- *   (atau UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
+ *   Integrasi biasanya mengisi env KV_REST_API_URL + KV_REST_API_TOKEN
+ *   (atau UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN) — tapi saat
+ *   nama store diberi awalan (mis. "MYPROJECT_KV_REST_API_URL") Vercel
+ *   memakai nama itu apa adanya, jadi kita cari juga secara pola nama.
  *
  * Development tanpa Redis: fallback ke file JSON di .data/ (di-gitignore).
  */
@@ -16,11 +18,25 @@ export type StoreKey = "wishes" | "rsvps" | "invitations" | "media";
 
 const MAX_ITEMS = 500;
 
+/** Cari env var pertama yang namanya cocok salah satu pola (anchor akhir). */
+export function findEnvByPattern(...suffixes: string[]): string | undefined {
+  const entries = Object.entries(process.env);
+  for (const suffix of suffixes) {
+    const match = entries.find(([key, value]) => key.endsWith(suffix) && value);
+    if (match) return match[1];
+  }
+  return undefined;
+}
+
 function getRedis(): Redis | null {
   const url =
-    process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL;
+    process.env.KV_REST_API_URL ??
+    process.env.UPSTASH_REDIS_REST_URL ??
+    findEnvByPattern("_KV_REST_API_URL", "_REDIS_REST_URL");
   const token =
-    process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN;
+    process.env.KV_REST_API_TOKEN ??
+    process.env.UPSTASH_REDIS_REST_TOKEN ??
+    findEnvByPattern("_KV_REST_API_TOKEN", "_REDIS_REST_TOKEN");
   if (!url || !token) return null;
   return new Redis({ url, token });
 }
