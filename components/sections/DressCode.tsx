@@ -1,11 +1,15 @@
 import { Shirt } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
+interface DressCodeProps {
+  settings: EditableSettings;
+}
+
 /** Optional dress code section with a color palette — hidden when empty. */
-export default function DressCode() {
-  const { dressCode } = weddingConfig;
+export default function DressCode({ settings }: DressCodeProps) {
+  const { dressCode } = settings;
 
   if (!dressCode.enabled || !dressCode.text) return null;
 

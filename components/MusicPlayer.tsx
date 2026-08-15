@@ -2,7 +2,7 @@
 
 import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { Music, Pause } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 
 export interface MusicPlayerHandle {
   /** Mulai memutar musik (dipanggil setelah user menekan "Buka Undangan"). */
@@ -10,6 +10,7 @@ export interface MusicPlayerHandle {
 }
 
 interface MusicPlayerProps {
+  settings: EditableSettings;
   /** Tombol hanya tampil setelah undangan dibuka */
   visible: boolean;
 }
@@ -19,8 +20,8 @@ interface MusicPlayerProps {
  * Tidak pernah autoplay — parent memanggil play() setelah user interaction.
  */
 const MusicPlayer = forwardRef<MusicPlayerHandle, MusicPlayerProps>(
-  function MusicPlayer({ visible }, ref) {
-  const { music } = weddingConfig;
+  function MusicPlayer({ settings, visible }, ref) {
+  const { music } = settings;
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
 

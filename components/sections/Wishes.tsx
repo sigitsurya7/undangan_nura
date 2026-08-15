@@ -2,19 +2,23 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { Send } from "lucide-react";
-import { weddingConfig, type Wish } from "@/config/wedding";
+import type { EditableSettings, Wish } from "@/config/wedding";
 import type { StoredWish } from "@/lib/records";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
+interface WishesProps {
+  settings: EditableSettings;
+}
+
 /**
  * WISHES & PRAYERS — form + daftar ucapan.
- * Data disimpan via /api/wishes; dummy seed tampil selama belum ada
- * ucapan tersimpan (atau storage belum dikonfigurasi).
+ * Data disimpan via /api/wishes. Tidak ada data dummy — sebelum ada
+ * ucapan yang tersimpan, daftar hanya menampilkan pesan kosong.
  */
-export default function Wishes() {
-  const { wishes } = weddingConfig;
-  const [list, setList] = useState<Wish[]>(wishes.seed);
+export default function Wishes({ settings }: WishesProps) {
+  const [list, setList] = useState<Wish[]>([]);
+  const [loaded, setLoaded] = useState(false);
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
@@ -22,18 +26,17 @@ export default function Wishes() {
   );
 
   useEffect(() => {
-    if (!wishes.enabled) return;
+    if (!settings.wishes.enabled) return;
     fetch("/api/wishes")
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { wishes?: StoredWish[] } | null) => {
-        if (data?.wishes && data.wishes.length > 0) setList(data.wishes);
+        if (data?.wishes) setList(data.wishes);
       })
-      .catch(() => {
-        /* gagal memuat — biarkan seed tampil */
-      });
-  }, [wishes.enabled]);
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, [settings.wishes.enabled]);
 
-  if (!wishes.enabled) return null;
+  if (!settings.wishes.enabled) return null;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,8 +52,7 @@ export default function Wishes() {
       if (!res.ok) throw new Error();
 
       const wish: Wish = { name: name.trim(), message: message.trim() };
-      // Buang seed dummy saat ucapan asli pertama masuk
-      setList((cur) => [wish, ...(cur === wishes.seed ? [] : cur)]);
+      setList((cur) => [wish, ...cur]);
       setName("");
       setMessage("");
       setStatus("sent");
@@ -120,24 +122,32 @@ export default function Wishes() {
           </form>
         </Reveal>
 
-        <ul className="mt-10 flex flex-col gap-5" aria-live="polite">
-          {list.map((wish, i) => (
-            <Reveal key={`${wish.name}-${i}`} delay={i * 60}>
-              <li
-                className={`border-[3px] border-ink px-6 py-5 shadow-[5px_5px_0_0_#141414] ${
-                  tones[i % tones.length]
-                } ${i % 2 === 0 ? "sm:-rotate-1" : "sm:rotate-1"}`}
-              >
-                <p className="text-sm leading-relaxed sm:text-base">
-                  &ldquo;{wish.message}&rdquo;
-                </p>
-                <p className="mt-3 font-heading text-sm font-bold uppercase tracking-widest">
-                  — {wish.name}
-                </p>
-              </li>
-            </Reveal>
-          ))}
-        </ul>
+        {list.length > 0 ? (
+          <ul className="mt-10 flex flex-col gap-5" aria-live="polite">
+            {list.map((wish, i) => (
+              <Reveal key={`${wish.name}-${i}`} delay={i * 60}>
+                <li
+                  className={`border-[3px] border-ink px-6 py-5 shadow-[5px_5px_0_0_#141414] ${
+                    tones[i % tones.length]
+                  } ${i % 2 === 0 ? "sm:-rotate-1" : "sm:rotate-1"}`}
+                >
+                  <p className="text-sm leading-relaxed sm:text-base">
+                    &ldquo;{wish.message}&rdquo;
+                  </p>
+                  <p className="mt-3 font-heading text-sm font-bold uppercase tracking-widest">
+                    — {wish.name}
+                  </p>
+                </li>
+              </Reveal>
+            ))}
+          </ul>
+        ) : (
+          loaded && (
+            <p className="mt-10 text-center text-sm text-ink/60">
+              Jadilah yang pertama mengirimkan ucapan &amp; doa. ✦
+            </p>
+          )
+        )}
       </div>
     </section>
   );

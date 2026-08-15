@@ -1,9 +1,14 @@
 /**
  * ============================================================
- *  WEDDING CONFIG — satu-satunya tempat mengedit konten undangan.
- *  Ganti nilai di sini; UI akan menyesuaikan secara otomatis.
- *  Section opsional (streaming, dressCode, music, giftAddress)
- *  otomatis disembunyikan saat `enabled: false` / data kosong.
+ *  WEDDING CONTENT — dua bagian:
+ *
+ *  1. `siteConfig`  — infrastruktur, TIDAK diedit dari website
+ *     (domain, passcode admin). Ubah langsung di file ini.
+ *
+ *  2. `defaultSettings` — konten yang TAMPIL di undangan dan BISA
+ *     diedit langsung dari /undangan_setting (tersimpan di storage,
+ *     lihat lib/wedding-settings.ts). Nilai di sini hanya dipakai
+ *     sebagai fallback sebelum pengantin menyimpan pengaturan apa pun.
  * ============================================================
  */
 
@@ -11,7 +16,7 @@ export interface Person {
   name: string;
   fullName: string;
   parents: { father: string; mother: string };
-  /** Path foto di /public, atau null untuk placeholder */
+  /** URL foto (hasil upload), atau null untuk placeholder */
   photo: string | null;
 }
 
@@ -22,7 +27,7 @@ export interface StoryChapter {
 }
 
 export interface GalleryPhoto {
-  /** Path foto di /public, atau null untuk placeholder */
+  /** URL foto (hasil upload), atau null untuk placeholder dummy */
   src: string | null;
   alt: string;
 }
@@ -31,7 +36,7 @@ export interface BankAccount {
   bank: string;
   number: string;
   holder: string;
-  /** Path gambar QRIS di /public, atau null untuk placeholder */
+  /** URL gambar QRIS (hasil upload), atau null untuk placeholder */
   qr: string | null;
 }
 
@@ -40,34 +45,70 @@ export interface Wish {
   message: string;
 }
 
-export const weddingConfig = {
-  meta: {
-    /** Domain undangan (dipakai untuk metadata & generate link) */
-    siteUrl: "https://undangan-nura.vercel.app",
-    ogImage: "/images/og-image.jpg",
-  },
+export interface EditableSettings {
+  couple: { bride: Person; groom: Person };
+  verse: { arabic: string; translation: string; source: string };
+  story: StoryChapter[];
+  event: {
+    /** ISO datetime dengan offset, mis. "2026-09-05T08:00:00+07:00" */
+    dateTime: string;
+    timeEnd: string;
+    venue: string;
+    address: string;
+    coordinates: { lat: number; lng: number };
+  };
+  /** Kosong = tampilkan dummy placeholder (lihat DUMMY_GALLERY) */
+  gallery: GalleryPhoto[];
+  rsvp: { enabled: boolean };
+  wishes: { enabled: boolean };
+  gift: { enabled: boolean; accounts: BankAccount[] };
+  giftAddress: {
+    enabled: boolean;
+    recipient: string;
+    address: string;
+    phone: string;
+  };
+  streaming: { enabled: boolean; url: string };
+  dressCode: { enabled: boolean; text: string; colors: string[] };
+  music: { enabled: boolean; url: string };
+}
 
+/** Infrastruktur — tidak diedit dari UI. */
+export const siteConfig = {
+  siteUrl: "https://undangan-nura.vercel.app",
+  ogImage: "/images/og-image.jpg",
   admin: {
-    /** Passcode halaman /kirim_undangan (deterrent ringan, bukan keamanan kuat) */
+    /** Passcode /kirim_undangan & /undangan_setting */
     passcode: "n5926d",
     /** Salah berturut-turut sebanyak ini → diarahkan ke halaman awal */
     maxAttempts: 3,
   },
+};
 
+/** Placeholder galeri saat pengantin belum mengunggah foto apa pun. */
+export const DUMMY_GALLERY: GalleryPhoto[] = [
+  { src: null, alt: "[PHOTO 01]" },
+  { src: null, alt: "[PHOTO 02]" },
+  { src: null, alt: "[PHOTO 03]" },
+  { src: null, alt: "[PHOTO 04]" },
+  { src: null, alt: "[PHOTO 05]" },
+  { src: null, alt: "[PHOTO 06]" },
+];
+
+export const defaultSettings: EditableSettings = {
   couple: {
     bride: {
       name: "Nura",
       fullName: "Nura",
       parents: { father: "[Nama Ayah]", mother: "[Nama Ibu]" },
       photo: null,
-    } satisfies Person,
-
+    },
     groom: {
       name: "Dika",
       fullName: "Dika",
       parents: { father: "[Nama Ayah]", mother: "[Nama Ibu]" },
       photo: null,
-    } satisfies Person,
+    },
   },
 
   verse: {
@@ -99,67 +140,26 @@ export const weddingConfig = {
       title: "The Wedding",
       text: "Finally, here we are.",
     },
-  ] satisfies StoryChapter[],
+  ],
 
   event: {
-    /** Dipakai countdown — waktu lokal WIB */
     dateTime: "2026-09-05T08:00:00+07:00",
-    dateLabel: { day: "SABTU", date: "05 SEPTEMBER", year: "2026" },
-    dateShort: "05 • 09 • 2026",
-    fullDateText: "Sabtu, 5 September 2026",
-    time: "08:00 WIB",
     timeEnd: "s/d Selesai",
     venue: "Kp. Lempong Tengah RT 02 RW 05",
     address: "Desa Karang Anyar, Kabupaten Garut, Jawa Barat",
     coordinates: { lat: -6.910056, lng: 107.611139 },
-    mapsUrl:
-      "https://www.google.com/maps?ll=-6.910056,107.611139&z=14&t=m&hl=id&gl=ID&mapclient=embed",
   },
 
-  gallery: [
-    { src: null, alt: "[PHOTO 01]" },
-    { src: null, alt: "[PHOTO 02]" },
-    { src: null, alt: "[PHOTO 03]" },
-    { src: null, alt: "[PHOTO 04]" },
-    { src: null, alt: "[PHOTO 05]" },
-    { src: null, alt: "[PHOTO 06]" },
-  ] satisfies GalleryPhoto[],
+  gallery: [],
 
-  rsvp: {
-    enabled: true,
-  },
-
-  wishes: {
-    enabled: true,
-    /** Dummy wishes — akan tampil sebelum ada data nyata */
-    seed: [
-      {
-        name: "Guest Name",
-        message:
-          "[Dummy wedding wish — doa dan harapan terbaik untuk kedua mempelai.]",
-      },
-      {
-        name: "Guest Name",
-        message: "[Dummy wedding wish — selamat menempuh hidup baru!]",
-      },
-      {
-        name: "Guest Name",
-        message:
-          "[Dummy wedding wish — semoga menjadi keluarga yang sakinah, mawaddah, warahmah.]",
-      },
-    ] satisfies Wish[],
-  },
+  rsvp: { enabled: true },
+  wishes: { enabled: true },
 
   gift: {
     enabled: true,
     accounts: [
-      {
-        bank: "BCA",
-        number: "[Nomor Rekening]",
-        holder: "a.n. [Nama]",
-        qr: null,
-      },
-    ] satisfies BankAccount[],
+      { bank: "BCA", number: "[Nomor Rekening]", holder: "a.n. [Nama]", qr: null },
+    ],
   },
 
   giftAddress: {
@@ -169,22 +169,7 @@ export const weddingConfig = {
     phone: "[Nomor Telepon]",
   },
 
-  streaming: {
-    enabled: false,
-    url: "",
-  },
-
-  dressCode: {
-    enabled: false,
-    text: "",
-    /** Palet warna dress code (hex) — tampil sebagai swatch */
-    colors: [] as string[],
-  },
-
-  music: {
-    enabled: false,
-    url: "",
-  },
+  streaming: { enabled: false, url: "" },
+  dressCode: { enabled: false, text: "", colors: [] },
+  music: { enabled: false, url: "" },
 };
-
-export type WeddingConfig = typeof weddingConfig;

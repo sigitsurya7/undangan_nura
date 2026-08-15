@@ -12,19 +12,19 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import { defaultSettings, type EditableSettings } from "@/config/wedding";
 import {
   buildInvitationLink,
   invitationId,
   type StoredInvitation,
 } from "@/lib/invitation";
 import type { StoredRsvp } from "@/lib/records";
+import { adminFetch } from "@/lib/admin-session";
 
-function waShareUrl(guestName: string, link: string): string {
-  const { bride, groom } = weddingConfig.couple;
+function waShareUrl(guestName: string, link: string, coupleNames: string): string {
   const text =
     `Kepada Yth. ${guestName},\n\n` +
-    `Dengan penuh kebahagiaan, kami mengundang Anda untuk hadir di hari pernikahan kami, ${bride.name} & ${groom.name}.\n\n` +
+    `Dengan penuh kebahagiaan, kami mengundang Anda untuk hadir di hari pernikahan kami, ${coupleNames}.\n\n` +
     `Undangan lengkap dapat dibuka di:\n${link}\n\n` +
     `Merupakan suatu kehormatan bagi kami apabila Anda berkenan hadir. Terima kasih.`;
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -53,6 +53,7 @@ export default function KirimUndangan() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
+  const [settings, setSettings] = useState<EditableSettings>(defaultSettings);
 
   useEffect(() => {
     fetch("/api/invitations")
@@ -68,7 +69,16 @@ export default function KirimUndangan() {
         if (data?.rsvps) setRsvps(data.rsvps);
       })
       .catch(() => {});
+
+    fetch("/api/settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { settings?: EditableSettings } | null) => {
+        if (data?.settings) setSettings(data.settings);
+      })
+      .catch(() => {});
   }, []);
+
+  const coupleNames = `${settings.couple.bride.name} & ${settings.couple.groom.name}`;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -78,7 +88,7 @@ export default function KirimUndangan() {
     setSending(true);
     setError(null);
     try {
-      const res = await fetch("/api/invitations", {
+      const res = await adminFetch("/api/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: clean }),
@@ -132,7 +142,7 @@ export default function KirimUndangan() {
     setBusyId(editingId);
     setListError(null);
     try {
-      const res = await fetch("/api/invitations", {
+      const res = await adminFetch("/api/invitations", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: editingId, name: clean }),
@@ -164,7 +174,7 @@ export default function KirimUndangan() {
     setBusyId(id);
     setListError(null);
     try {
-      const res = await fetch("/api/invitations", {
+      const res = await adminFetch("/api/invitations", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -269,7 +279,7 @@ export default function KirimUndangan() {
                 )}
               </button>
               <a
-                href={waShareUrl(latest.name, latest.link)}
+                href={waShareUrl(latest.name, latest.link, coupleNames)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-brutal bg-teal px-4 py-2 text-xs uppercase text-cream sm:text-sm"
@@ -434,7 +444,7 @@ export default function KirimUndangan() {
                             )}
                           </button>
                           <a
-                            href={waShareUrl(inv.name, inv.link)}
+                            href={waShareUrl(inv.name, inv.link, coupleNames)}
                             target="_blank"
                             rel="noopener noreferrer"
                             aria-label={`Kirim ke ${inv.name} via WhatsApp`}

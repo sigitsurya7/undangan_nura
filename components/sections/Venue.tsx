@@ -1,13 +1,19 @@
 import { ExternalLink } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
+import { buildMapsEmbedUrl, buildMapsUrl } from "@/lib/event-date";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
+interface VenueProps {
+  settings: EditableSettings;
+}
+
 /** THE VENUE — embedded Google Maps (no API key) + open-in-maps button. */
-export default function Venue() {
-  const { event } = weddingConfig;
+export default function Venue({ settings }: VenueProps) {
+  const { event } = settings;
   const { lat, lng } = event.coordinates;
-  const embedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+  const embedUrl = buildMapsEmbedUrl(lat, lng);
+  const mapsUrl = buildMapsUrl(lat, lng);
 
   return (
     <section className="border-y-[3px] border-ink bg-periwinkle/30 px-6 py-16 sm:py-24">
@@ -29,7 +35,7 @@ export default function Venue() {
               </p>
               <p className="text-sm text-ink/75">{event.address}</p>
               <a
-                href={event.mapsUrl}
+                href={mapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-brutal bg-teal px-6 py-3 text-sm uppercase text-cream sm:text-base"

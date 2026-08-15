@@ -1,4 +1,4 @@
-import { weddingConfig } from "@/config/wedding";
+import { siteConfig } from "@/config/wedding";
 
 export interface StoredInvitation {
   /** Opsional untuk data lama; item baru selalu punya id */
@@ -15,6 +15,6 @@ export function invitationId(inv: StoredInvitation): string {
 
 /** Bentuk link undangan personal: <siteUrl>/?to=<nama> */
 export function buildInvitationLink(name: string): string {
-  const base = weddingConfig.meta.siteUrl.replace(/\/$/, "");
+  const base = siteConfig.siteUrl.replace(/\/$/, "");
   return `${base}/?to=${encodeURIComponent(name)}`;
 }

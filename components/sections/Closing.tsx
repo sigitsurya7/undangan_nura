@@ -1,16 +1,22 @@
 import { Heart } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
+import { formatEventDisplay } from "@/lib/event-date";
 import Reveal from "@/components/ui/Reveal";
 import Marquee from "@/components/ui/Marquee";
 
+interface ClosingProps {
+  settings: EditableSettings;
+}
+
 /** Big memorable closing section. */
-export default function Closing() {
-  const { couple, event } = weddingConfig;
+export default function Closing({ settings }: ClosingProps) {
+  const { couple, event } = settings;
+  const display = formatEventDisplay(event.dateTime);
 
   return (
     <footer className="border-t-[3px] border-ink bg-ink text-cream">
       <Marquee
-        items={["Thank you", "Terima kasih", "See you there", "05.09.2026"]}
+        items={["Thank you", "Terima kasih", "See you there", display.dateShort]}
         className="border-y-0 border-b-[3px] border-cream/30 bg-ink text-cream"
       />
 
@@ -39,7 +45,7 @@ export default function Closing() {
             {couple.bride.name} &amp; {couple.groom.name}
           </p>
           <span className="sticker bg-lemon -rotate-2 text-sm text-ink">
-            {event.dateShort}
+            {display.dateShort}
           </span>
         </Reveal>
       </div>

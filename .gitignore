@@ -34,8 +34,9 @@ yarn-error.log*
 .env*
 !.env.example
 
-# local dev storage (fallback ketika Redis belum dikonfigurasi)
+# local dev storage (fallback ketika Redis/Blob belum dikonfigurasi)
 /.data/
+/public/uploads/
 
 # vercel
 .vercel

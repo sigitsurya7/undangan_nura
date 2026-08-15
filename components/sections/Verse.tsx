@@ -1,9 +1,13 @@
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 
-/** Minimal Islamic verse section (QS. Ar-Rum: 21). */
-export default function Verse() {
-  const { verse } = weddingConfig;
+interface VerseProps {
+  settings: EditableSettings;
+}
+
+/** Minimal Islamic verse section (QS. Ar-Rum: 21 secara default). */
+export default function Verse({ settings }: VerseProps) {
+  const { verse } = settings;
 
   return (
     <section className="px-6 py-16 sm:py-24">

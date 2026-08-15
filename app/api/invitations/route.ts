@@ -1,4 +1,5 @@
 import { listItems, pushItem, replaceItems, cleanText } from "@/lib/storage";
+import { isAuthorized, unauthorizedResponse } from "@/lib/admin-auth";
 import {
   buildInvitationLink,
   invitationId,
@@ -31,6 +32,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isAuthorized(request)) return unauthorizedResponse();
+
   let body: unknown;
   try {
     body = await request.json();
@@ -71,6 +74,8 @@ export async function POST(request: Request) {
 
 /** Edit nama penerima — link dibuat ulang dari nama baru. */
 export async function PATCH(request: Request) {
+  if (!isAuthorized(request)) return unauthorizedResponse();
+
   const { id, name } = await readBody(request);
   const cleanName = cleanText(name, 100);
 
@@ -118,6 +123,8 @@ export async function PATCH(request: Request) {
 
 /** Hapus satu undangan berdasarkan id. */
 export async function DELETE(request: Request) {
+  if (!isAuthorized(request)) return unauthorizedResponse();
+
   const { id } = await readBody(request);
 
   if (typeof id !== "string" || !id) {

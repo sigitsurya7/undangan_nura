@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Archivo_Black, Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
-import { weddingConfig } from "@/config/wedding";
+import { siteConfig } from "@/config/wedding";
+import { getEffectiveSettings } from "@/lib/wedding-settings";
 
 const archivo = Archivo_Black({
   weight: "400",
@@ -19,21 +20,23 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const { bride, groom } = weddingConfig.couple;
+export async function generateMetadata(): Promise<Metadata> {
+  const { couple } = await getEffectiveSettings();
+  const title = `${couple.bride.name} & ${couple.groom.name} — Wedding Invitation`;
+  const description = `Dengan penuh kebahagiaan, kami mengundang Anda untuk hadir di hari pernikahan ${couple.bride.name} & ${couple.groom.name}.`;
 
-export const metadata: Metadata = {
-  metadataBase: new URL(weddingConfig.meta.siteUrl),
-  title: `${bride.name} & ${groom.name} — Wedding Invitation`,
-  description:
-    "Dengan penuh kebahagiaan, kami mengundang Anda untuk hadir di hari pernikahan Nura & Dika.",
-  openGraph: {
-    title: `${bride.name} & ${groom.name} — Wedding Invitation`,
-    description:
-      "Dengan penuh kebahagiaan, kami mengundang Anda untuk hadir di hari pernikahan Nura & Dika.",
-    images: [weddingConfig.meta.ogImage],
-    type: "website",
-  },
-};
+  return {
+    metadataBase: new URL(siteConfig.siteUrl),
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [siteConfig.ogImage],
+      type: "website",
+    },
+  };
+}
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (

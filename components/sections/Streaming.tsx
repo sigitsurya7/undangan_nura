@@ -1,10 +1,14 @@
 import { Radio } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 
+interface StreamingProps {
+  settings: EditableSettings;
+}
+
 /** Optional live streaming section — hidden when disabled or URL empty. */
-export default function Streaming() {
-  const { streaming } = weddingConfig;
+export default function Streaming({ settings }: StreamingProps) {
+  const { streaming } = settings;
 
   if (!streaming.enabled || !streaming.url) return null;
 

@@ -2,9 +2,13 @@
 
 import { useState } from "react";
 import { Copy, Check, QrCode } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
+
+interface GiftProps {
+  settings: EditableSettings;
+}
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -16,8 +20,8 @@ async function copyText(text: string): Promise<boolean> {
 }
 
 /** SEND YOUR LOVE — bank accounts + QRIS with copy-to-clipboard. */
-export default function Gift() {
-  const { gift } = weddingConfig;
+export default function Gift({ settings }: GiftProps) {
+  const { gift } = settings;
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   if (!gift.enabled || gift.accounts.length === 0) return null;

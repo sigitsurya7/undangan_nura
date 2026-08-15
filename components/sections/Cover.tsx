@@ -2,9 +2,11 @@
 
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, Heart } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
+import { formatEventDisplay } from "@/lib/event-date";
 
 interface CoverProps {
+  settings: EditableSettings;
   onOpen: () => void;
   opened: boolean;
 }
@@ -14,9 +16,10 @@ interface CoverProps {
  * falls back to the placeholder) and the "Buka Undangan" button.
  * Pemakainya wajib membungkus dengan <Suspense> (karena useSearchParams).
  */
-export default function Cover({ onOpen, opened }: CoverProps) {
-  const { couple, event } = weddingConfig;
+export default function Cover({ settings, onOpen, opened }: CoverProps) {
+  const { couple, event } = settings;
   const guestName = useSearchParams().get("to")?.trim() || "[Nama Tamu]";
+  const display = formatEventDisplay(event.dateTime);
 
   return (
     <div
@@ -27,7 +30,7 @@ export default function Cover({ onOpen, opened }: CoverProps) {
     >
       {/* Decorative corner stickers */}
       <span className="sticker bg-bubblegum absolute left-4 top-6 -rotate-6 text-xs sm:left-10 sm:top-10 sm:text-sm">
-        05.09.26
+        {display.dateSticker}
       </span>
       <span className="sticker bg-lemon absolute right-4 top-6 rotate-3 text-xs sm:right-10 sm:top-10 sm:text-sm">
         Save the date
@@ -63,7 +66,7 @@ export default function Cover({ onOpen, opened }: CoverProps) {
             aria-hidden="true"
             className="absolute -right-2 top-1/2 hidden -translate-y-1/2 flex-col gap-1 sm:flex"
           >
-            {["05", "09", "26"].map((n) => (
+            {display.dateSticker.split(".").map((n) => (
               <span
                 key={n}
                 className="border-[3px] border-ink bg-paper px-2 py-0.5 font-heading text-sm font-bold shadow-[3px_3px_0_0_#141414]"
@@ -75,7 +78,7 @@ export default function Cover({ onOpen, opened }: CoverProps) {
         </div>
 
         <p className="mt-5 border-y-[3px] border-ink py-2 font-heading text-sm font-bold uppercase tracking-[0.2em] sm:text-base">
-          {event.fullDateText}
+          {display.fullDateText}
         </p>
 
         <div className="card-brutal mt-8 w-full max-w-xs px-6 py-4">

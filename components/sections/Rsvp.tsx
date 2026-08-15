@@ -2,11 +2,15 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Check, Minus, Plus } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
 type Attendance = "hadir" | "tidak";
+
+interface RsvpProps {
+  settings: EditableSettings;
+}
 
 export interface RsvpPayload {
   name: string;
@@ -30,7 +34,7 @@ async function handleRSVP(payload: RsvpPayload): Promise<void> {
 }
 
 /** WILL YOU JOIN US? — RSVP form, tersimpan ke storage. */
-export default function Rsvp() {
+export default function Rsvp({ settings }: RsvpProps) {
   const [name, setName] = useState("");
   const [attendance, setAttendance] = useState<Attendance>("hadir");
   const [guestCount, setGuestCount] = useState(1);
@@ -38,7 +42,7 @@ export default function Rsvp() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!weddingConfig.rsvp.enabled) return null;
+  if (!settings.rsvp.enabled) return null;
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();

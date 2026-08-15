@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
@@ -11,6 +11,10 @@ interface TimeLeft {
   hours: number;
   minutes: number;
   seconds: number;
+}
+
+interface CountdownProps {
+  settings: EditableSettings;
 }
 
 function getTimeLeft(target: number): TimeLeft | null {
@@ -26,9 +30,9 @@ function getTimeLeft(target: number): TimeLeft | null {
 }
 
 /** Real-time countdown to the wedding day. */
-export default function Countdown() {
-  const target = new Date(weddingConfig.event.dateTime).getTime();
-  // null = belum mount (hindari hydration mismatch); "done" = waktunya tiba
+export default function Countdown({ settings }: CountdownProps) {
+  const target = new Date(settings.event.dateTime).getTime();
+  // "pending" = belum mount (hindari hydration mismatch); null = waktunya tiba
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null | "pending">("pending");
 
   useEffect(() => {

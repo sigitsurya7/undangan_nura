@@ -2,10 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import { DUMMY_GALLERY, type EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import PhotoPlaceholder from "@/components/ui/PhotoPlaceholder";
+
+interface GalleryProps {
+  settings: EditableSettings;
+}
 
 const tones = [
   "bg-lemon",
@@ -16,9 +20,13 @@ const tones = [
   "bg-paper",
 ];
 
-/** OUR MOMENTS — photo grid (2 cols mobile / 3 desktop) with a lightbox. */
-export default function Gallery() {
-  const { gallery } = weddingConfig;
+/**
+ * OUR MOMENTS — photo grid (2 cols mobile / 3 desktop) with a lightbox.
+ * Belum ada foto diunggah → tampilkan placeholder dummy.
+ * Sudah ada foto → dummy otomatis hilang, hanya foto asli yang tampil.
+ */
+export default function Gallery({ settings }: GalleryProps) {
+  const gallery = settings.gallery.length > 0 ? settings.gallery : DUMMY_GALLERY;
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   const close = useCallback(() => setActiveIndex(null), []);
@@ -56,7 +64,7 @@ export default function Gallery() {
 
         <div className="mt-12 grid grid-cols-2 gap-4 sm:mt-16 sm:gap-6 lg:grid-cols-3">
           {gallery.map((photo, i) => (
-            <Reveal key={photo.alt} delay={(i % 3) * 80}>
+            <Reveal key={`${photo.alt}-${i}`} delay={(i % 3) * 80}>
               <button
                 type="button"
                 onClick={() => setActiveIndex(i)}

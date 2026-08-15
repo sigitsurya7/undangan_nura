@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useRef, useState } from "react";
+import type { EditableSettings } from "@/config/wedding";
 import Cover from "@/components/sections/Cover";
 import Hero from "@/components/sections/Hero";
 import Verse from "@/components/sections/Verse";
@@ -20,8 +21,12 @@ import Closing from "@/components/sections/Closing";
 import FloatingNav from "@/components/FloatingNav";
 import MusicPlayer, { type MusicPlayerHandle } from "@/components/MusicPlayer";
 
+interface InvitationProps {
+  settings: EditableSettings;
+}
+
 /** Root client shell: cover overlay → open → music + scroll to content. */
-export default function Invitation() {
+export default function Invitation({ settings }: InvitationProps) {
   const [opened, setOpened] = useState(false);
   const musicRef = useRef<MusicPlayerHandle>(null);
 
@@ -45,27 +50,27 @@ export default function Invitation() {
     <main className="relative min-h-screen">
       {/* Suspense wajib: Cover membaca ?to= via useSearchParams */}
       <Suspense fallback={null}>
-        <Cover opened={opened} onOpen={handleOpen} />
+        <Cover settings={settings} opened={opened} onOpen={handleOpen} />
       </Suspense>
 
-      <Hero />
-      <Verse />
-      <Couple />
-      <Story />
-      <EventDetails />
-      <Venue />
-      <Countdown />
-      <Gallery />
-      <Rsvp />
-      <Wishes />
-      <Gift />
-      <GiftAddress />
-      <Streaming />
-      <DressCode />
-      <Closing />
+      <Hero settings={settings} />
+      <Verse settings={settings} />
+      <Couple settings={settings} />
+      <Story settings={settings} />
+      <EventDetails settings={settings} />
+      <Venue settings={settings} />
+      <Countdown settings={settings} />
+      <Gallery settings={settings} />
+      <Rsvp settings={settings} />
+      <Wishes settings={settings} />
+      <Gift settings={settings} />
+      <GiftAddress settings={settings} />
+      <Streaming settings={settings} />
+      <DressCode settings={settings} />
+      <Closing settings={settings} />
 
       {opened && <FloatingNav />}
-      <MusicPlayer ref={musicRef} visible={opened} />
+      <MusicPlayer ref={musicRef} settings={settings} visible={opened} />
     </main>
   );
 }

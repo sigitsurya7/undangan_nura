@@ -1,11 +1,17 @@
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
+interface StoryProps {
+  settings: EditableSettings;
+}
+
 /** OUR STORY — vertical timeline built from config data. */
-export default function Story() {
-  const { story } = weddingConfig;
+export default function Story({ settings }: StoryProps) {
+  const { story } = settings;
   const tones = ["bg-lemon", "bg-bubblegum", "bg-periwinkle", "bg-coral text-cream"];
+
+  if (story.length === 0) return null;
 
   return (
     <section id="story" className="border-y-[3px] border-ink bg-paper px-6 py-16 sm:py-24">
@@ -14,7 +20,7 @@ export default function Story() {
 
         <ol className="relative mt-14 flex flex-col gap-10 border-l-[3px] border-ink pl-8 sm:mt-16 sm:gap-12 sm:pl-12">
           {story.map((chapter, i) => (
-            <li key={`${chapter.year}-${chapter.title}`} className="relative">
+            <li key={`${chapter.year}-${chapter.title}-${i}`} className="relative">
               {/* Timeline node */}
               <span
                 aria-hidden="true"

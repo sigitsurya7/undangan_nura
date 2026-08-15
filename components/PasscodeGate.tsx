@@ -9,21 +9,22 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
-
-const STORAGE_KEY = "kirim-undangan-unlocked";
+import { siteConfig } from "@/config/wedding";
+import { getStoredPasscode, setStoredPasscode } from "@/lib/admin-session";
 
 interface PasscodeGateProps {
   children: ReactNode;
 }
 
 /**
- * Gerbang passcode bergaya PIN modal untuk halaman internal.
+ * Gerbang passcode bergaya PIN modal untuk halaman internal
+ * (/kirim_undangan, /undangan_setting — passcode yang sama untuk keduanya).
  * Salah `maxAttempts` kali berturut-turut → diarahkan ke halaman awal.
- * Status buka disimpan di sessionStorage agar refresh tidak menanyakan ulang.
+ * Status buka disimpan di sessionStorage agar refresh tidak menanyakan ulang,
+ * dan dipakai kembali (via adminFetch) untuk mengotorisasi request ke API.
  */
 export default function PasscodeGate({ children }: PasscodeGateProps) {
-  const { passcode, maxAttempts } = weddingConfig.admin;
+  const { passcode, maxAttempts } = siteConfig.admin;
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,11 +36,11 @@ export default function PasscodeGate({ children }: PasscodeGateProps) {
   // Cek sessionStorage setelah mount (async agar aman untuk hydration & lint)
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
-      if (sessionStorage.getItem(STORAGE_KEY) === "1") setUnlocked(true);
+      if (getStoredPasscode() === passcode) setUnlocked(true);
       else inputRef.current?.focus();
     });
     return () => cancelAnimationFrame(raf);
-  }, []);
+  }, [passcode]);
 
   if (unlocked) return <>{children}</>;
 
@@ -52,7 +53,7 @@ export default function PasscodeGate({ children }: PasscodeGateProps) {
     if (next.length !== length) return;
 
     if (next.toLowerCase() === passcode.toLowerCase()) {
-      sessionStorage.setItem(STORAGE_KEY, "1");
+      setStoredPasscode(passcode);
       setUnlocked(true);
       return;
     }
@@ -78,7 +79,7 @@ export default function PasscodeGate({ children }: PasscodeGateProps) {
           shake ? "animate-shake" : ""
         }`}
       >
-        <span className="mx-auto flex h-14 w-14 items-center justify-center border-[3px] border-ink bg-lemon shadow-[4px_4px_0_0_#141414]">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center border-[3px] border-ink bg-lemon shadow-brutal-sm">
           <KeyRound aria-hidden="true" className="h-7 w-7" />
         </span>
 
@@ -96,7 +97,7 @@ export default function PasscodeGate({ children }: PasscodeGateProps) {
             {Array.from({ length }).map((_, i) => (
               <span
                 key={i}
-                className={`flex h-12 w-10 items-center justify-center border-[3px] border-ink font-display text-xl shadow-[3px_3px_0_0_#141414] ${
+                className={`flex h-12 w-10 items-center justify-center border-[3px] border-ink font-display text-xl shadow-brutal-sm ${
                   i < value.length
                     ? "bg-bubblegum"
                     : i === value.length
@@ -127,7 +128,7 @@ export default function PasscodeGate({ children }: PasscodeGateProps) {
         >
           {attempts > 0
             ? `Passcode salah. Sisa percobaan: ${maxAttempts - attempts}`
-            : " "}
+            : " "}
         </p>
       </div>
     </div>

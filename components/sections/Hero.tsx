@@ -1,11 +1,18 @@
 import { Heart } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
+import { formatEventDisplay } from "@/lib/event-date";
 import Reveal from "@/components/ui/Reveal";
 import Marquee from "@/components/ui/Marquee";
 
+interface HeroProps {
+  settings: EditableSettings;
+}
+
 /** Poster-style home section — the couple's names as oversized typography. */
-export default function Hero() {
-  const { couple, event } = weddingConfig;
+export default function Hero({ settings }: HeroProps) {
+  const { couple, event } = settings;
+  const display = formatEventDisplay(event.dateTime);
+  const [dd, mm, yy] = display.dateSticker.split(".");
 
   return (
     <section id="home" className="relative overflow-hidden pt-20 sm:pt-28">
@@ -30,11 +37,7 @@ export default function Hero() {
         </Reveal>
 
         <Reveal delay={200} className="mt-10 flex flex-wrap items-center justify-center gap-3">
-          {[
-            event.dateLabel.day,
-            event.dateLabel.date,
-            event.dateLabel.year,
-          ].map((chunk, i) => (
+          {[display.day, display.date, display.year].map((chunk, i) => (
             <span
               key={chunk}
               className={`border-[3px] border-ink px-4 py-2 font-heading text-sm font-bold uppercase tracking-widest shadow-[4px_4px_0_0_#141414] sm:text-base ${
@@ -48,7 +51,12 @@ export default function Hero() {
       </div>
 
       <Marquee
-        items={["Nura & Dika", "05.09.2026", "Save the date", "Garut, Jawa Barat"]}
+        items={[
+          `${couple.bride.name} & ${couple.groom.name}`,
+          `${dd}.${mm}.20${yy}`,
+          "Save the date",
+          event.venue,
+        ]}
         className="bg-lemon"
       />
     </section>

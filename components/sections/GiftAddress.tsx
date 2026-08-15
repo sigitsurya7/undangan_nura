@@ -2,13 +2,17 @@
 
 import { useState } from "react";
 import { Check, Copy, Package } from "lucide-react";
-import { weddingConfig } from "@/config/wedding";
+import type { EditableSettings } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 
+interface GiftAddressProps {
+  settings: EditableSettings;
+}
+
 /** SEND A GIFT — physical gift address with copy-to-clipboard. */
-export default function GiftAddress() {
-  const { giftAddress } = weddingConfig;
+export default function GiftAddress({ settings }: GiftAddressProps) {
+  const { giftAddress } = settings;
   const [copied, setCopied] = useState(false);
 
   if (!giftAddress.enabled) return null;

@@ -1,4 +1,4 @@
-import { weddingConfig, type Person } from "@/config/wedding";
+import type { EditableSettings, Person } from "@/config/wedding";
 import Reveal from "@/components/ui/Reveal";
 import SectionTitle from "@/components/ui/SectionTitle";
 import PhotoPlaceholder from "@/components/ui/PhotoPlaceholder";
@@ -48,9 +48,13 @@ function ProfileCard({
   );
 }
 
+interface CoupleProps {
+  settings: EditableSettings;
+}
+
 /** THE COUPLE — two profile cards for bride and groom. */
-export default function Couple() {
-  const { bride, groom } = weddingConfig.couple;
+export default function Couple({ settings }: CoupleProps) {
+  const { bride, groom } = settings.couple;
 
   return (
     <section id="couple" className="px-6 py-16 sm:py-24">
